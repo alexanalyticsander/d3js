@@ -1,0 +1,226 @@
+<html>
+<head>
+<meta charset ="utf-8">
+<script type="text/javascript" src="../lib/d3.v5.min.js"></script>
+<style>
+select { position: absolute; left: 130px; top: 27px; }
+</style>
+
+<select id="year"></select>
+
+</head>
+
+<body>
+
+<script>
+
+margin = {top: 100, right: 100, bottom: 100, left: 100}
+  , width = 1280 - margin.left - margin.right // Use the window's width 
+  , height = 780 - margin.top - margin.bottom;
+
+var svg = d3.select("body").append("svg").attr("width", 1280).attr("height", 780)
+
+
+d3.dsv(",", "earthquake.csv",function(d) {	
+return{
+year: +d["Year"],
+state: d["State"],
+"7.0+": +d["7.0+"],
+"6_6.9": +d["6_6.9"],
+"5_5.9": +d["5_5.9"]
+};
+}).then(function (d) {return barchart(d)})
+
+/*chart>bar csv>dataset*/
+
+function barchart(dataset) {
+
+	var magnitude = dataset.columns.slice(2);
+console.log(magnitude)
+	var year   = d3.map(dataset, function(d){return(d.year)}).keys()
+	var states = d3.map(dataset, function(d){return(d.state)}).keys()
+	  var option_select = d3.select('#selectors').append("select")
+      .attr("class", "option-select");
+	
+	var options = d3.select("#year").selectAll("option")
+		.data(year)
+	.enter().append("option")
+		.text(function (d) {return d})
+
+	var xScale = d3.scaleBand()
+	.range([margin.left, width])
+	.padding(0.1)
+
+	var yScale = d3.scaleLinear()
+		.range([height,margin.top])
+
+		svg.append("g")
+    .attr("class", "xaxis")
+    .attr("transform", "translate(0," + height + ")")
+    .call(d3.axisBottom(xScale)); // Create an axis component with d3.axisBottom
+
+		svg.append("g")
+    .attr("class", "yaxis")
+    .attr("transform", "translate(" + margin.left + ",0)")
+    .call(d3.axisLeft(yScale)); // Create an axis component with d3.axisLeft
+
+	var color = d3.scaleOrdinal()
+				.domain(magnitude)
+		.range(["#b33040", "#d25c4d", "#f2b447"])
+
+
+	update(d3.select("#year").property("value"), 0)
+
+	function update(input) {
+
+		var data = dataset.filter(function(d) {return d.year == input})
+
+		console.log(data)
+
+		data.forEach(function(d) {
+			d.total = d3.sum(magnitude, function(e) {return +d[e]})
+			return d
+		})
+
+		xScale.domain(data.map(function(d) {return d.state}));
+		
+		svg.selectAll(".xaxis").call(d3.axisBottom(xScale))
+		
+		yScale.domain([0, d3.max(data, d => d3.sum(magnitude, k => +d[k]))]).nice();
+		
+		svg.selectAll(".yaxis")
+			.call(d3.axisLeft(yScale))
+			
+		/*y.domain([0,				
+		d3.max(data, function(d) {return d3.sum(magnitude, function(e) {return +d[e]})})]).nice();*/
+
+		var group = svg.selectAll("g.layer")
+			.data(d3.stack().keys(magnitude)(data), function(d) {return d.key})
+
+		group.exit().remove()
+
+		group.enter().append("g")
+			.classed("layer", true)
+			.attr("fill", function(d) {return color(d.key)});
+
+		var bars = svg.selectAll("g.layer").selectAll("rect")
+			.data(function(d) {return  d}, function(e) {return  e.data.state});
+
+		bars.exit().remove()
+
+		bars.enter().append("rect")
+			.attr("width", xScale.bandwidth())
+			.merge(bars)
+			.attr("x", function(d) {return xScale(d.data.state)})
+			.attr("y", function(d) {return yScale(d[1])})
+			.attr("height", function(d) {return yScale(d[0]) - yScale(d[1])})
+
+		var text = svg.selectAll(".text")
+			.data(data, function(d) {return  d.state});
+
+		text.exit().remove()
+
+		text.enter().append("text")
+			.attr("class", "text")
+			.attr("text-anchor", "middle")
+			.merge(text)
+			.attr("x", function(d) {return xScale(d.state) + xScale.bandwidth() / 2})
+			.attr("y", function(d) {return yScale(d.total) - 5})
+			.text(function(d) {return d.total})
+			    .attr("font-family", "sans-serif")
+ 			
+		text.enter().append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 20)
+      .attr("x",0 - (height / 2))
+      .attr("dy", "1em")
+      .style("text-anchor", "middle")
+      .text("Number of Earthquakes")
+                .attr("font-family", "sans-serif")
+                .attr("font-weight",50);
+      
+      text.enter().append("text")             
+      .attr("transform",
+            "translate(" + (width*5/9) + " ," + 
+                           (height + margin.top/2) + ")")
+      .style("text-anchor", "middle")
+      .text("State")
+          .attr("font-family", "sans-serif")
+                          .attr("font-weight",50); 
+    
+    text.enter().append("text")             
+      .attr("transform",
+            "translate(" + (width*1/40) + " ," + 
+                           (margin.top/3) + ")")
+      .style("text-anchor", "left")
+      .text("Select year:")
+          .attr("font-family", "sans-serif")
+                          .attr("font-weight",10); 
+      
+}
+       	
+
+	      const colors2 = {
+  0: {
+    c: "#b33040"
+  },
+  1: {
+    c: "#d25c4d"
+  },
+  2: {
+    c: "#f2b447"
+  }
+};
+
+console.log(colors2)
+var legend_keys = ["7.0+","6_6.9","5_5.9"]
+
+var barLegend = svg.selectAll(".barLegend").data(legend_keys)
+    .enter().append("g")
+    .attr("class","barLegend")
+    .attr("transform", function (d,i) {
+            return "translate(" + width*19/20 + "," + (i*20)+")";
+        });
+
+barLegend.append("text").text(function (d) {return d;})
+    .attr("transform", "translate(15,100)")
+    .attr("font-family", "sans-serif")
+    .attr("font-weight",1000); //align texts with boxes
+
+barLegend.append("circle")
+    .attr("fill", function (d, i) {return colors2[i].c})
+    .attr("r", 5)
+    .attr("transform", "translate(5,97)")
+	
+            //create student id
+            svg.append("text")
+            .attr("x", width*19/20).attr("y", height+50).attr("text-anchor", "middle")  
+            .attr("font-size", "15px")
+             .attr("font-family", "sans-serif")
+            .attr("class", "title")
+            .text("asong49")	
+
+			//create title
+			svg.append("text")
+            .attr("x", (width+margin.left)/2).attr("y", height/15).attr("text-anchor", "middle")  
+            .attr("font-size", "20px")
+             .attr("font-family", "sans-serif")
+            .attr("class", "title")
+            .text("Visualizing Earthquake Counts by State")
+            
+
+	
+	var select = d3.select("#year")
+		.on("change", function() {
+			update(this.value, 750)
+		})
+
+}
+
+
+
+
+</script>
+
+</body>
+</html> 
