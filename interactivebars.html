@@ -2,10 +2,6 @@
 <meta charset="utf-8">
 <script type="text/javascript" src="../lib/d3.v5.min.js"></script>
 <style type="text/css">
-/* 13. Basic Styling with CSS */
-
-/* Style the lines by removing the fill and applying a stroke */
-
 </style>
 <body>
 <script type="text/javascript">
@@ -14,8 +10,8 @@ var formatTime = d3.timeFormat("%Y");
 var parseTime = d3.timeParse("%Y");
 
 var margin = {top: 100, right: 100, bottom: 100, left: 100}
-  , width = 1280 - margin.left - margin.right // Use the window's width 
-  , height = 700 - margin.top - margin.bottom; // Use the window's height
+  , width = 1280 - margin.left - margin.right
+  , height = 700 - margin.top - margin.bottom;
 
 d3.dsv(",", "state-year-earthquakes.csv",function(d) {	
 return{
@@ -26,31 +22,17 @@ return{
 };
 }).then(function(d) {
 
-dataset = d;
-console.log(dataset)
-
-
 var countsbyregion = d3.nest()
 .key(function(d) {return d["region"]})
 .key(function(d) {return d.year})
 .rollup(function(v) {return {"total": d3.sum(v, function(d) {return d.count}), "region": d3.max(v, function(d) {return d.region})}})
 .entries(d)
 
-
-
-
-console.log(countsbyregion);
-
-console.log(countsbyregion[0]);
-
-
-// 1. Add the SVG to the page and employ #2
 var svg = d3.select("body").append("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom)
-    .append("g")
-    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
+.attr("width", width + margin.left + margin.right)
+.attr("height", height + margin.top + margin.bottom)
+.append("g")
+.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 xScale = d3.scaleTime()
 .domain([d3.min(countsbyregion,function(d){
@@ -70,18 +52,14 @@ return 400+d3.max(d.values, function(d){
 return d.value.total;})})])
 .range([height, 0]);
 
-
-// 3. Call the x axis in a group tag
 svg.append("g")
-    .attr("class", "x axis")
-    .attr("transform", "translate(0," + height + ")")
-    .call(d3.axisBottom(xScale).ticks(5))
-    ; // Create an axis component with d3.axisBottom
+.attr("class", "x axis")
+.attr("transform", "translate(0," + height + ")")
+.call(d3.axisBottom(xScale).ticks(5))
 
-// 4. Call the y axis in a group tag
 svg.append("g")
-    .attr("class", "y axis")
-    .call(d3.axisLeft(yScale)); // Create an axis component with d3.axisLeft
+.attr("class", "y axis")
+.call(d3.axisLeft(yScale)); // Create an axis component with d3.axisLeft
 
 const colors = {
   0: {
@@ -93,58 +71,51 @@ const colors = {
   2: {
     c: "blue",
   },
-	3: {
+  3: {
     c: "red",
   }
 };
 
 var priceline = d3.line()
-    .x(function(d) { return xScale(parseTime(d.key)); })
-    .y(function(d) { return yScale(d.value.total); });
+.x(function(d) { return xScale(parseTime(d.key)); })
+.y(function(d) { return yScale(d.value.total); });
 
 var svg2 = d3.select("body").append("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom)
-    .append("g")
-    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");    
+.attr("width", width + margin.left + margin.right)
+.attr("height", height + margin.top + margin.bottom)
+.append("g")
+.attr("transform", "translate(" + margin.left + "," + margin.top + ")");    
 
-
-
-			yScale2 = d3.scaleBand()
-							   .range([height, 0])
-							   .padding(0.1);
+yScale2 = d3.scaleBand()
+.range([height, 0])
+.padding(0.1);
 							   
-			xScale2 = d3.scaleLinear()
-							   .range([0, width])
-							   ;
+xScale2 = d3.scaleLinear()
+.range([0, width]);
 
-			//Define X axis
-			xAxis = d3.axisBottom().scale(xScale2)
-			//Define Y axis
-			yAxis = d3.axisLeft().scale(yScale2)
+//Define X axis
+xAxis = d3.axisBottom().scale(xScale2)
+//Define Y axis
+yAxis = d3.axisLeft().scale(yScale2)
 
 countsbyregion.forEach(function(d,i) {
 
-        svg.append("path")
-            .attr("class", "line")
-        	.attr("d", priceline(d.values))
-        	.style("stroke", colors[i].c)
-        	.attr("fill", "none");
+svg.append("path")
+.attr("class", "line")
+.attr("d", priceline(d.values))
+.style("stroke", colors[i].c)
+.attr("fill", "none");
 
-
-
-		svg.selectAll('.symbol')
-		.data(countsbyregion[i].values)
-		.enter()
-		.append("path")
-		.attr("transform", function(d) { return "translate(" + xScale(parseTime(d.key)) + "," + yScale(d.value.total) + ")"; })
-		.attr("d", d3.symbol().type(d3.symbolCircle).size(50))
-		.attr("fill", colors[i].c)
-		.on("mouseover", function (d, i) {
-          year = d.key,
-          region = d.value.region
-console.log(year)
-console.log(region)
+svg.selectAll('.symbol')
+.data(countsbyregion[i].values)
+.enter()
+.append("path")
+.attr("transform", function(d) { return "translate(" + xScale(parseTime(d.key)) + "," + yScale(d.value.total) + ")"; })
+.attr("d", d3.symbol().type(d3.symbolCircle).size(50))
+.attr("fill", colors[i].c)
+.on("mouseover", function (d, i) {
+year = d.key,
+region = d.value.region
 
 d3.select(this).attr("d", d3.symbol().type(d3.symbolCircle).size(300))
 
@@ -153,72 +124,59 @@ d3.min(dataset.filter(function(d) {return d.year == year & d.region == region}),
 d3.max(dataset.filter(function(d) {return d.year == year & d.region == region}), function(d) { return d.count; })
 ]).nice()
 
-yScale2.domain(dataset.filter(function(d) {return d.region == region & d.year == year}).sort(function(a,b) 
-{ 
-return d3.descending(b.count, a.count) || d3.descending(a.state, b.state)})
+yScale2.domain(dataset.filter(function(d) {return d.region == region & d.year == year})
+.sort(function(a,b) {return d3.descending(b.count, a.count) || d3.descending(a.state, b.state)})
 .map(function(d) {return d.state}))
 
-
 svg2.selectAll("rect")
-			   .data(dataset.filter(function(d) {return d.year == year}))
-			   .enter()
-			   .append("rect")
-			   .filter(function(d) {return d.region == region})
-			   .attr("fill", "steelblue")
-			   .attr("x", 0)
-			   .attr("y", function(d) {
-			   		return yScale2(d.state);
-			   })
-			   .attr("width", function(d) {return xScale2(d.count)})
-			   .attr("height", yScale2.bandwidth())
+.data(dataset.filter(function(d) {return d.year == year}))
+.enter()
+.append("rect")
+.filter(function(d) {return d.region == region})
+.attr("fill", "steelblue")
+.attr("x", 0)
+.attr("y", function(d) {
+return yScale2(d.state);
+})
+.attr("width", function(d) {return xScale2(d.count)})
+.attr("height", yScale2.bandwidth())
 			
-			//create title
-			svg2.append("text")
-            .attr("x", (width+margin.left)/2).attr("y", 0).attr("text-anchor", "middle")  
-            .attr("font-size", "20px")
-             .attr("font-family", "sans-serif")
-            .attr("class", "title")
-            .text(region + "ern Region Earthquakes " + year)   
+svg2.append("text")
+.attr("x", (width+margin.left)/2).attr("y", 0).attr("text-anchor", "middle")  
+.attr("font-size", "20px")
+.attr("font-family", "sans-serif")
+.attr("class", "title")
+.text(region + "ern Region Earthquakes " + year)   
 
 svg2.append("g")
-    .attr("class", "x axis")
-    .attr("transform", "translate(0," + height + ")")
-    .call(d3.axisBottom(xScale2))
-
+.attr("class", "x axis")
+.attr("transform", "translate(0," + height + ")")
+.call(d3.axisBottom(xScale2))
 
 svg2.append("g")
 .attr("class", "axis")
 .call(yAxis);
 
 function make_x_gridlines() {		
-    return d3.axisBottom(xScale2)
+return d3.axisBottom(xScale2)
 }
-  svg2.append("g")			
-      .attr("class", "grid")
-      .attr("transform", "translate(0," + height + ")")
-      .call(make_x_gridlines()
-          .tickSize(-height)
-          .tickFormat("")
-      )
 
+svg2.append("g")			
+.attr("class", "grid")
+.attr("transform", "translate(0," + height + ")")
+.call(make_x_gridlines()
+.tickSize(-height)
+.tickFormat("")
+)
+})
 
-
-          })
-          .on("mouseout", function() { svg2.selectAll("rect").remove()
-          svg2.selectAll("g").remove()
-          svg2.selectAll("text").remove()
-          d3.select(this).attr("d", d3.symbol().type(d3.symbolCircle).size(50))
+.on("mouseout", function() { svg2.selectAll("rect").remove()
+svg2.selectAll("g").remove()
+svg2.selectAll("text").remove()
+d3.select(this).attr("d", d3.symbol().type(d3.symbolCircle).size(50))
           
-          })
-          });
-
-
-
-
-
-			
-
-	   													
+})
+});
 
 const colors2 = {
   0: {
@@ -238,42 +196,34 @@ const colors2 = {
 var legend_keys = ["Midwest","Northeast","South", "West"]
 
 var lineLegend = svg.selectAll(".lineLegend").data(legend_keys)
-    .enter().append("g")
-    .attr("class","lineLegend")
-    .attr("transform", function (d,i) {
-            return "translate(" + width*16/20 + "," + (i*20)+")";
-        });
+.enter().append("g")
+.attr("class","lineLegend")
+.attr("transform", function (d,i) {
+return "translate(" + width*16/20 + "," + (i*20)+")";
+});
 
 lineLegend.append("text").text(function (d) {return d;})
-    .attr("transform", "translate(15,5)")
-    .attr("font-family", "sans-serif")
-    .attr("font-weight",1000); //align texts with boxes
+.attr("transform", "translate(15,5)")
+.attr("font-family", "sans-serif")
+.attr("font-weight",1000); //align texts with boxes
 
 lineLegend.append("circle")
-    .attr("fill", function (d, i) {return colors2[i].c; })
-    .attr("r", 5);
+.attr("fill", function (d, i) {return colors2[i].c; })
+.attr("r", 5);
     
+svg.append("text")
+.attr("x", width/2).attr("y", height/15).attr("text-anchor", "middle")  
+.attr("font-size", "20px")
+.attr("font-family", "sans-serif")
+.attr("class", "title")
+.text("US Earthquakes by Region 2011-2015")   
 
-    
-
-			//create title
-			svg.append("text")
-            .attr("x", width/2).attr("y", height/15).attr("text-anchor", "middle")  
-            .attr("font-size", "20px")
-             .attr("font-family", "sans-serif")
-            .attr("class", "title")
-            .text("US Earthquakes by Region 2011-2015")   
-
-
-
-            //create student id
-            svg.append("text")
-            .attr("x", width/2).attr("y", height/7).attr("text-anchor", "middle")  
-            .attr("font-size", "15px")
-             .attr("font-family", "sans-serif")
-            .attr("class", "title")
-            .text("asong49")	
-
+svg.append("text")
+.attr("x", width/2).attr("y", height/7).attr("text-anchor", "middle")  
+.attr("font-size", "15px")
+.attr("font-family", "sans-serif")
+.attr("class", "title")
+.text("asong49")	
 	   			
 });
 </script>
