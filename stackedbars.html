@@ -15,7 +15,7 @@ select { position: absolute; left: 130px; top: 27px; }
 <script>
 
 margin = {top: 100, right: 100, bottom: 100, left: 100}
-  , width = 1280 - margin.left - margin.right // Use the window's width 
+  , width = 1280 - margin.left - margin.right
   , height = 780 - margin.top - margin.bottom;
 
 var svg = d3.select("body").append("svg").attr("width", 1280).attr("height", 780)
@@ -54,12 +54,12 @@ var yScale = d3.scaleLinear()
 svg.append("g")
 .attr("class", "xaxis")
 .attr("transform", "translate(0," + height + ")")
-.call(d3.axisBottom(xScale)); // Create an axis component with d3.axisBottom
+.call(d3.axisBottom(xScale));
 
 svg.append("g")
 .attr("class", "yaxis")
 .attr("transform", "translate(" + margin.left + ",0)")
-.call(d3.axisLeft(yScale)); // Create an axis component with d3.axisLeft
+.call(d3.axisLeft(yScale));
 
 var color = d3.scaleOrdinal()
 .domain(magnitude)
@@ -169,7 +169,7 @@ var barLegend = svg.selectAll(".barLegend").data(legend_keys)
 barLegend.append("text").text(function (d) {return d;})
 .attr("transform", "translate(15,100)")
 .attr("font-family", "sans-serif")
-.attr("font-weight",1000); //align texts with boxes
+.attr("font-weight",1000);
 
 barLegend.append("circle")
 .attr("fill", function (d, i) {return colors2[i].c})
