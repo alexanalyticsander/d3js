@@ -92,10 +92,8 @@ yScale2 = d3.scaleBand()
 							   
 xScale2 = d3.scaleLinear()
 .range([0, width]);
-
-//Define X axis
+	
 xAxis = d3.axisBottom().scale(xScale2)
-//Define Y axis
 yAxis = d3.axisLeft().scale(yScale2)
 
 countsbyregion.forEach(function(d,i) {
